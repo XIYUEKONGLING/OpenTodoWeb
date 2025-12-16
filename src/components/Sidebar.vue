@@ -3,13 +3,16 @@ import { ref } from 'vue';
 import {useProfile} from "../composables/useProfile.ts";
 import {useI18n} from "../composables/useI18n.ts";
 import type {Project} from "../models.ts";
+import router from "../router";
 
 const { profile } = useProfile();
 const { t } = useI18n();
 
+// State: UI
 const isCollapsed = ref(false);
 const selectedProjectId = ref<string | null>(null);
 
+// Actions
 const selectProject = (id: string) => {
   selectedProjectId.value = id;
 };
@@ -41,8 +44,8 @@ function createProjectClicked(){
   );
 }
 
-function settingClicked(){
-  console.log("[DEBUG] Setting Clicked");
+function settingsClicked(){
+  router.push(`/settings`);
 }
 </script>
 
@@ -101,24 +104,23 @@ function settingClicked(){
                  hover:bg-white/50 dark:hover:bg-white/10 hover:border-slate-500 dark:hover:border-slate-400
                  transition-all duration-200 text-slate-600 dark:text-slate-300 group"
       >
-      <span v-if="!isCollapsed" class="flex items-center px-4 py-3 gap-3 w-full">
-          <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
-          <span class="font-medium truncate text-black dark:text-white">{{ t("sidebar.create_project") }}</span>
-      </span>
-
-      <span v-else class="flex justify-center w-full py-3">
-          <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
-      </span>
-    </button>
+        <span v-if="!isCollapsed" class="flex items-center px-4 py-3 gap-3 w-full">
+            <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
+            <span class="font-medium truncate text-black dark:text-white">{{ t("sidebar.create_project") }}</span>
+        </span>
+  
+        <span v-else class="flex justify-center w-full py-3">
+            <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
+        </span>
+      </button>
     </div>
 
     <div class="p-3 border-t border-white/40">
-      <button @click="settingClicked" class="w-full flex items-center justify-center p-3 rounded-xl hover:bg-white/50 dark:hover:bg-black/50 transition-colors text-slate-700 dark:text-white">
+      <button @click="settingsClicked" class="w-full flex items-center justify-center p-3 rounded-xl hover:bg-white/50 dark:hover:bg-black/50 transition-colors text-slate-700 dark:text-white">
         <i class="fa-solid fa-gear text-black dark:text-white"></i>
         <span v-if="!isCollapsed" class="ml-2 text-black dark:text-white">{{ t('sidebar.settings') }}</span>
       </button>
     </div>
-    
   </aside>
 </template>
 
@@ -126,13 +128,16 @@ function settingClicked(){
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.3);
   border-radius: 10px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.5);
 }
