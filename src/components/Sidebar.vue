@@ -1,144 +1,116 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import {useProfile} from "../composables/useProfile.ts";
-import {useI18n} from "../composables/useI18n.ts";
-import type {Project} from "../models.ts";
-import router from "../router";
+import { useProfile } from "../composables/useProfile";
+import { useI18n } from "../composables/useI18n";
+import { useRouter, useRoute } from "vue-router";
+import { v4 as uuidv4 } from 'uuid';
+import { Modal, Input, message } from 'ant-design-vue';
 
 const { profile } = useProfile();
 const { t } = useI18n();
+const router = useRouter();
+const route = useRoute();
 
-// State: UI
-const isCollapsed = ref(false);
-const selectedProjectId = ref<string | null>(null);
+const isCreateModalVisible = ref(false);
+const newProjectName = ref("");
+const newProjectDesc = ref("");
 
-// Actions
-const selectProject = (id: string) => {
-  selectedProjectId.value = id;
+const navigateTo = (path: string) => {
+  router.push(path);
 };
 
+const showCreateModal = () => {
+  newProjectName.value = "";
+  newProjectDesc.value = "";
+  isCreateModalVisible.value = true;
+};
 
-// Debug Code
-var createProject = (id: string): Project => ({
-  Id: crypto.randomUUID(),
-  Name: id,
-  Description: null, 
-  TaskLists: [],
+const handleCreateProject = () => {
+  if (!newProjectName.value.trim()) {
+    message.error("Project name is required");
+    return;
+  }
 
-  CreatedAt: new Date().toISOString(),
-  UpdatedAt: new Date().toISOString(),
-});
-profile.Projects.push(
-    createProject("Example A")
-);
-profile.Projects.push(
-    createProject("Example B")
-);
+  const newProject = {
+    Id: uuidv4(),
+    Name: newProjectName.value,
+    Description: newProjectDesc.value,
+    TaskLists: [],
+    CreatedAt: new Date().toISOString(),
+    UpdatedAt: new Date().toISOString()
+  };
 
-var tempCounter = 0;
-function createProjectClicked(){
-  console.log("[DEBUG] Create Project");
-  tempCounter++;
-  profile.Projects.push(
-      createProject("Example " + tempCounter.toString())
-  );
-}
-
-function settingsClicked(){
-  router.push(`/settings`);
-}
+  profile.Projects.push(newProject);
+  isCreateModalVisible.value = false;
+  router.push(`/project/${newProject.Id}`);
+  message.success("Project created");
+};
 </script>
 
 <template>
-  <aside
-      class="flex flex-col h-full transition-all duration-300 border-r
-      border-white/40 bg-white/60 
-      dark:border-black/40 dark:bg-black/60
-       backdrop-blur-xl shadow-sm"
-      :class="[isCollapsed ? 'w-16' : 'w-64']"
-  >
-
-    <div class="grid grid-cols-1 auto-cols-max items-center p-4 border-b border-white/40 dark:border-black/40">
-      <div class="flex items-center justify-center">
-        <h1
-            v-if="!isCollapsed"
-            class="text-xl font-bold text-slate-800 truncate dark:text-white text-center"
-        >
-          {{ t('program.title') }}
-        </h1>
-      </div>
-
-      <button
-          @click="isCollapsed = !isCollapsed"
-          class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/15 transition-colors text-slate-600"
-      >
-        <i :class="['fa-solid', isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left']" class="text-black dark:text-white"></i>
-      </button>
+  <div class="w-64 h-full bg-white border-r border-gray-200 flex flex-col shrink-0">
+    <!-- Header -->
+    <div class="h-16 flex items-center px-6 border-b border-gray-100">
+      <i class="fa-solid fa-check-double text-blue-600 text-xl mr-3"></i>
+      <span class="font-bold text-lg text-gray-800">{{ t('app.title') }}</span>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+    <!-- Projects List -->
+    <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      <div class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        {{ t('nav.projects') }}
+      </div>
+
       <div
           v-for="project in profile.Projects"
           :key="project.Id"
-          @click="selectProject(project.Id)"
-          class="cursor-pointer rounded-xl transition-all duration-200 group relative"
-          :class="[
-          selectedProjectId === project.Id 
-            ? 'bg-blue-500/20 border border-blue-500/50 text-blue-700' 
-            : 'hover:bg-white/50 dark:hover:bg-black/20 border dark:border-white/50'
-        ]"
+          @click="navigateTo(`/project/${project.Id}`)"
+          class="group flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors duration-150"
+          :class="route.path === `/project/${project.Id}` ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'"
       >
-        <div v-if="!isCollapsed" class="flex px-4 py-3 items-center">
-          <i class="fa-solid fa-tasks text-black dark:text-white"></i>
-          <div class="font-medium truncate text-black dark:text-white px-3">{{ project.Name }}</div>
-        </div>
-        
-        <div v-else class="flex justify-center py-3">
-          <div class="w-2 h-2 rounded-full bg-slate-400" :class="{ 'bg-blue-500': selectedProjectId === project.Id }"></div>
-        </div>
+        <i class="fa-solid fa-folder mr-3" :class="route.path === `/project/${project.Id}` ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'"></i>
+        <span class="truncate">{{ project.Name }}</span>
       </div>
 
       <button
-        @click="createProjectClicked"
-        class="w-full flex items-center rounded-xl border border-dashed border-slate-400/70 dark:border-slate-300/50
-                 hover:bg-white/50 dark:hover:bg-white/10 hover:border-slate-500 dark:hover:border-slate-400
-                 transition-all duration-200 text-slate-600 dark:text-slate-300 group"
+          @click="showCreateModal"
+          class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-500 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors mt-2"
       >
-        <span v-if="!isCollapsed" class="flex items-center px-4 py-3 gap-3 w-full">
-            <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
-            <span class="font-medium truncate text-black dark:text-white">{{ t("sidebar.create_project") }}</span>
-        </span>
-  
-        <span v-else class="flex justify-center w-full py-3">
-            <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
-        </span>
+        <i class="fa-solid fa-plus mr-3 text-gray-400"></i>
+        {{ t('nav.new_project') }}
       </button>
     </div>
 
-    <div class="p-3 border-t border-white/40">
-      <button @click="settingsClicked" class="w-full flex items-center justify-center p-3 rounded-xl hover:bg-white/50 dark:hover:bg-black/50 transition-colors text-slate-700 dark:text-white">
-        <i class="fa-solid fa-gear text-black dark:text-white"></i>
-        <span v-if="!isCollapsed" class="ml-2 text-black dark:text-white">{{ t('sidebar.settings') }}</span>
+    <!-- Footer -->
+    <div class="p-4 border-t border-gray-200">
+      <button
+          @click="navigateTo('/settings')"
+          class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+          :class="route.path === '/settings' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+      >
+        <i class="fa-solid fa-gear mr-3 text-gray-400"></i>
+        {{ t('nav.settings') }}
       </button>
     </div>
-  </aside>
+
+    <!-- Create Project Modal -->
+    <Modal
+        v-model:open="isCreateModalVisible"
+        :title="t('nav.new_project')"
+        @ok="handleCreateProject"
+        :okText="t('common.confirm')"
+        :cancelText="t('common.cancel')"
+    >
+      <div class="space-y-4 py-2">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('project.name') }}</label>
+          <Input v-model:value="newProjectName" :placeholder="t('project.name')" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('project.desc') }}</label>
+          <Input.TextArea v-model:value="newProjectDesc" :rows="3" />
+        </div>
+      </div>
+    </Modal>
+  </div>
 </template>
-
-<style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.5);
-}
-</style>

@@ -1,4 +1,4 @@
-import { ref, reactive, watch } from 'vue';
+import { reactive, watch } from 'vue';
 import type { Profile } from '../models';
 
 const getDefaultProfile = (): Profile => ({
@@ -9,26 +9,20 @@ const getDefaultProfile = (): Profile => ({
 });
 
 const profile = reactive<Profile>(getDefaultProfile());
-const backgroundBase64 = ref<string | null>(null);
 
 export function useProfile() {
 
     const init = () => {
         const saved = localStorage.getItem('opentodo_profile');
-        const savedBg = localStorage.getItem('opentodo_bg');
-
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                profile.Projects = [];
+                // Reset and assign to keep reactivity
+                Object.keys(profile).forEach(key => delete (profile as any)[key]);
                 Object.assign(profile, parsed);
             } catch (e) {
                 console.error("Failed to load profile", e);
             }
-        }
-
-        if (savedBg) {
-            backgroundBase64.value = savedBg;
         }
     };
 
@@ -37,16 +31,6 @@ export function useProfile() {
         localStorage.setItem('opentodo_profile', JSON.stringify(newVal));
     }, { deep: true });
 
-    const setBackground = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const result = e.target?.result as string;
-            backgroundBase64.value = result;
-            localStorage.setItem('opentodo_bg', result);
-        };
-        reader.readAsDataURL(file);
-    };
-
     const exportProfile = () => {
         const dataStr = JSON.stringify(profile, null, 4);
         const blob = new Blob([dataStr], { type: 'application/json' });
@@ -54,8 +38,8 @@ export function useProfile() {
 
         const link = document.createElement('a');
         link.href = url;
-        const dateStr = new Date().toISOString().split('T')[0];
-        link.download = `OpenTodo_Backup_${dateStr}.json`;
+        const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+        link.download = `OpenTodo_Profile_${dateStr}.json`;
         document.body.appendChild(link);
         link.click();
 
@@ -70,11 +54,10 @@ export function useProfile() {
                 try {
                     const json = e.target?.result as string;
                     const parsed = JSON.parse(json);
-
-                    if (!parsed.Projects || !Array.isArray(parsed.Projects)) {
-                        throw new Error("Invalid profile format");
+                    // Basic validation
+                    if (!parsed.UserInfo || !Array.isArray(parsed.Projects)) {
+                        throw new Error("Invalid profile structure");
                     }
-
                     resolve(parsed as Profile);
                 } catch (err) {
                     reject(err);
@@ -87,28 +70,20 @@ export function useProfile() {
     const replaceProfile = (newProfile: Profile) => {
         Object.keys(profile).forEach(key => delete (profile as any)[key]);
         Object.assign(profile, newProfile);
+        // Force save immediately
         localStorage.setItem('opentodo_profile', JSON.stringify(profile));
     };
 
     const resetProfile = () => {
         const defaults = getDefaultProfile();
-
-        profile.Projects = [];
+        Object.keys(profile).forEach(key => delete (profile as any)[key]);
         Object.assign(profile, defaults);
-
-        backgroundBase64.value = null;
-
         localStorage.removeItem('opentodo_profile');
-        localStorage.removeItem('opentodo_bg');
-
-        window.location.reload();
     };
 
     return {
         profile,
-        backgroundBase64,
         init,
-        setBackground,
         exportProfile,
         parseProfileFile,
         replaceProfile,
