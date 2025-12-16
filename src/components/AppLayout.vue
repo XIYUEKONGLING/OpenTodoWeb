@@ -25,7 +25,7 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
 </script>
 
 <template>
-  <!-- Root Container: Handles global text color and background for consistency -->
+  <!-- Root Container -->
   <div class="flex h-screen w-full overflow-hidden transition-colors duration-300"
        :class="isDark ? 'bg-slate-950 text-slate-100' : 'bg-gray-50 text-slate-800'">
 
@@ -51,7 +51,7 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
     </div>
 
     <!-- Mobile Drawer -->
-    <div v-if="isMobile && isMobileMenuOpen" class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" @click="toggleMobileMenu">
+    <div v-if="isMobile && isMobileMenuOpen" class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm" @click="toggleMobileMenu">
       <div class="absolute right-0 top-0 bottom-0 w-64 shadow-xl transition-colors"
            :class="isDark ? 'bg-slate-900' : 'bg-white'"
            @click.stop>
@@ -60,7 +60,6 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
     </div>
 
     <!-- Main Content Area -->
-    <!-- Added bg-gray-50/slate-950 here to ensure the main area always has the correct background -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative transition-colors"
           :class="[isMobile ? 'pt-16' : '', isDark ? 'bg-slate-950' : 'bg-gray-50']">
       <slot></slot>

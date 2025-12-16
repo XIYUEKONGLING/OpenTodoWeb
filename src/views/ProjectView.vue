@@ -16,8 +16,10 @@ const project = computed(() => profile.Projects.find(p => p.Id === route.params.
 const isEditProjectOpen = ref(false);
 const editProjectName = ref("");
 const editProjectDesc = ref("");
+
 const isAddListOpen = ref(false);
 const newListTitle = ref("");
+const newListDesc = ref("");
 
 const openEditProject = () => {
   if(!project.value) return;
@@ -37,6 +39,8 @@ const deleteProject = () => {
   Modal.confirm({
     title: t('project.delete_confirm'),
     okType: 'danger',
+    okText: t('common.delete'),
+    cancelText: t('common.cancel'),
     onOk: () => {
       const idx = profile.Projects.findIndex(p => p.Id === project.value?.Id);
       if (idx !== -1) {
@@ -52,7 +56,7 @@ const addList = () => {
   const newList = {
     Id: uuidv4(),
     Title: newListTitle.value,
-    Description: null,
+    Description: newListDesc.value || null,
     UngroupedTasks: [],
     TaskGroups: [],
     CreatedAt: new Date().toISOString(),
@@ -61,6 +65,7 @@ const addList = () => {
   project.value.TaskLists.push(newList);
   isAddListOpen.value = false;
   newListTitle.value = "";
+  newListDesc.value = "";
 };
 
 const goToList = (lid: string) => {
@@ -70,7 +75,6 @@ const goToList = (lid: string) => {
 
 <template>
   <AppLayout>
-    <!-- Removed bg-gray-50 dark:bg-slate-950 because AppLayout handles it now -->
     <div v-if="project" class="flex-1 flex flex-col h-full p-6 overflow-y-auto">
 
       <!-- Header -->
@@ -110,7 +114,7 @@ const goToList = (lid: string) => {
           </div>
           <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 mb-1">{{ list.Title }}</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ list.UngroupedTasks.filter(t => !t.IsDeleted).length + list.TaskGroups.reduce((acc, g) => acc + g.Tasks.filter(t => !t.IsDeleted).length, 0) }} Tasks
+            {{ t('list.tasks_count', { count: list.UngroupedTasks.filter(t => !t.IsDeleted).length + list.TaskGroups.reduce((acc, g) => acc + g.Tasks.filter(t => !t.IsDeleted).length, 0) }) }}
           </p>
         </div>
 
@@ -126,26 +130,40 @@ const goToList = (lid: string) => {
 
       <div v-else class="flex-1 flex flex-col items-center justify-center text-gray-400">
         <Empty :description="false" />
-        <p class="mt-4 mb-6">No lists yet.</p>
+        <p class="mt-4 mb-6">{{ t('list.no_lists') }}</p>
         <Button type="primary" size="large" @click="isAddListOpen = true">{{ t('list.add') }}</Button>
       </div>
     </div>
 
-    <!-- Fallback if project not found (e.g. deleted) -->
     <div v-else class="flex-1 flex items-center justify-center text-gray-500">
       Project not found.
     </div>
 
     <!-- Modals -->
-    <Modal v-model:open="isEditProjectOpen" :title="t('common.edit')" @ok="saveProject">
-      <div class="space-y-4 pt-2">
-        <Input v-model:value="editProjectName" />
-        <Input.TextArea v-model:value="editProjectDesc" />
+    <Modal v-model:open="isEditProjectOpen" :title="t('common.edit')" @ok="saveProject" :okText="t('common.save')" :cancelText="t('common.cancel')">
+      <div class="flex flex-col gap-4 pt-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('project.name') }}</label>
+          <Input v-model:value="editProjectName" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('project.desc') }}</label>
+          <Input.TextArea v-model:value="editProjectDesc" :rows="3" />
+        </div>
       </div>
     </Modal>
 
-    <Modal v-model:open="isAddListOpen" :title="t('list.add')" @ok="addList">
-      <Input v-model:value="newListTitle" :placeholder="t('list.title')" @pressEnter="addList" />
+    <Modal v-model:open="isAddListOpen" :title="t('list.add')" @ok="addList" :okText="t('common.confirm')" :cancelText="t('common.cancel')">
+      <div class="flex flex-col gap-4 pt-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('list.title') }}</label>
+          <Input v-model:value="newListTitle" :placeholder="t('list.title')" @pressEnter="addList" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('list.desc') }}</label>
+          <Input.TextArea v-model:value="newListDesc" :placeholder="t('list.desc')" :rows="2" />
+        </div>
+      </div>
     </Modal>
   </AppLayout>
 </template>

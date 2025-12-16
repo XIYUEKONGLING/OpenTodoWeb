@@ -15,7 +15,7 @@ const fileList = ref<UploadFile[]>([]);
 
 const handleExport = () => {
   exportProfile();
-  message.success("Profile exported successfully");
+  message.success(t('settings.export_success'));
 };
 
 const beforeUpload: UploadProps['beforeUpload'] = async (file) => {
@@ -29,12 +29,12 @@ const beforeUpload: UploadProps['beforeUpload'] = async (file) => {
       cancelText: t('common.cancel'),
       onOk() {
         replaceProfile(newProfile);
-        message.success("Profile imported successfully");
+        message.success(t('settings.import_success'));
         setTimeout(() => window.location.reload(), 500);
       }
     });
   } catch (e) {
-    message.error("Failed to parse profile file");
+    message.error(t('settings.parse_error'));
     console.error(e);
   }
   return false; // Prevent auto upload
@@ -65,18 +65,18 @@ const handleReset = () => {
         <Card :title="t('settings.language')" class="shadow-sm mb-6">
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
-              <span>Language</span>
+              <span>{{ t('settings.language') }}</span>
               <Select :value="locale" @change="setLocale" class="w-48">
                 <Select.Option value="en-US">English (US)</Select.Option>
                 <Select.Option value="zh-CN">简体中文</Select.Option>
               </Select>
             </div>
             <div class="flex items-center justify-between">
-              <span>Theme</span>
+              <span>{{ t('settings.theme') }}</span>
               <Select :value="themeMode" @change="setTheme" class="w-48">
-                <Select.Option value="auto">System (Auto)</Select.Option>
-                <Select.Option value="light">Light</Select.Option>
-                <Select.Option value="dark">Dark</Select.Option>
+                <Select.Option value="auto">{{ t('settings.theme_auto') }}</Select.Option>
+                <Select.Option value="light">{{ t('settings.theme_light') }}</Select.Option>
+                <Select.Option value="dark">{{ t('settings.theme_dark') }}</Select.Option>
               </Select>
             </div>
           </div>
@@ -89,7 +89,7 @@ const handleReset = () => {
             <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
               <div>
                 <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ t('settings.export') }}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Download your data as a JSON file.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('settings.export_desc') }}</p>
               </div>
               <Button @click="handleExport">
                 <template #icon><i class="fa-solid fa-download mr-2"></i></template>

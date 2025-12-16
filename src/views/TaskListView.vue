@@ -23,15 +23,20 @@ const list = computed(() => project.value?.TaskLists.find(l => l.Id === route.pa
 // --- Edit List ---
 const isEditListOpen = ref(false);
 const editListTitle = ref("");
+const editListDesc = ref("");
 
 const openEditList = () => {
   if(!list.value) return;
   editListTitle.value = list.value.Title;
+  editListDesc.value = list.value.Description || "";
   isEditListOpen.value = true;
 };
 
 const saveList = () => {
-  if(list.value) list.value.Title = editListTitle.value;
+  if(list.value) {
+    list.value.Title = editListTitle.value;
+    list.value.Description = editListDesc.value;
+  }
   isEditListOpen.value = false;
 };
 
@@ -39,6 +44,8 @@ const deleteList = () => {
   Modal.confirm({
     title: t('list.delete_confirm'),
     okType: 'danger',
+    okText: t('common.delete'),
+    cancelText: t('common.cancel'),
     onOk: () => {
       if(!project.value) return;
       const idx = project.value.TaskLists.findIndex(l => l.Id === list.value?.Id);
@@ -74,7 +81,6 @@ const handleSaveTask = (data: any) => {
 
   if (isEditingTask.value) {
     // Update existing
-    // Find task in ungrouped or groups
     let target = list.value.UngroupedTasks.find(t => t.Id === data.Id);
     if (!target) {
       for (const g of list.value.TaskGroups) {
@@ -107,9 +113,36 @@ const toggleTask = (task: TaskItem) => {
   task.CompletedAt = task.IsCompleted ? new Date().toISOString() : null;
 };
 
-const softDeleteTask = (task: TaskItem) => {
-  task.IsDeleted = true;
-  task.UpdatedAt = new Date().toISOString();
+const handleDeleteTask = (task: TaskItem) => {
+  if (task.IsDeleted) {
+    // Permanent Delete
+    Modal.confirm({
+      title: t('task.delete_perm_confirm'),
+      okType: 'danger',
+      okText: t('common.delete_perm'),
+      cancelText: t('common.cancel'),
+      onOk: () => {
+        if (!list.value) return;
+        // Search and remove
+        let idx = list.value.UngroupedTasks.findIndex(t => t.Id === task.Id);
+        if (idx !== -1) {
+          list.value.UngroupedTasks.splice(idx, 1);
+          return;
+        }
+        for (const g of list.value.TaskGroups) {
+          idx = g.Tasks.findIndex(t => t.Id === task.Id);
+          if (idx !== -1) {
+            g.Tasks.splice(idx, 1);
+            return;
+          }
+        }
+      }
+    });
+  } else {
+    // Soft Delete
+    task.IsDeleted = true;
+    task.UpdatedAt = new Date().toISOString();
+  }
 };
 
 // --- Group Management ---
@@ -150,9 +183,11 @@ const saveGroup = () => {
 
 const deleteGroup = (gid: string) => {
   Modal.confirm({
-    title: "Delete Group?",
-    content: "Tasks inside will be deleted (soft).",
+    title: t('group.delete_confirm'),
+    content: t('group.delete_msg'),
     okType: 'danger',
+    okText: t('common.delete'),
+    cancelText: t('common.cancel'),
     onOk: () => {
       if(!list.value) return;
       const idx = list.value.TaskGroups.findIndex(g => g.Id === gid);
@@ -176,7 +211,7 @@ const deleteGroup = (gid: string) => {
         </div>
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2 text-sm text-gray-500">
-            <span>Show Deleted</span>
+            <span>{{ t('list.show_deleted') }}</span>
             <Switch v-model:checked="showDeleted" size="small" />
           </div>
           <Button @click="openEditList">{{ t('common.edit') }}</Button>
@@ -187,11 +222,17 @@ const deleteGroup = (gid: string) => {
       <!-- Content -->
       <div class="flex-1 overflow-y-auto p-6 space-y-8 max-w-5xl mx-auto w-full">
 
+        <!-- Fixed Issue 6: Show Description -->
+        <div v-if="list.Description" class="text-gray-500 dark:text-gray-400 text-sm bg-white dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
+          {{ list.Description }}
+        </div>
+
         <!-- Ungrouped Tasks Section -->
         <div>
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-gray-700 dark:text-gray-200">Tasks</h2>
-            <Button type="dashed" size="small" @click="openAddTask(null)">+ Add Task</Button>
+            <!-- Fixed Issue 2: Darker text for Light mode -->
+            <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200">Tasks</h2>
+            <Button type="dashed" size="small" @click="openAddTask(null)">+ {{ t('task.add') }}</Button>
           </div>
 
           <div class="grid grid-cols-1 gap-3">
@@ -201,16 +242,16 @@ const deleteGroup = (gid: string) => {
                 :task="task"
                 @toggle="toggleTask(task)"
                 @edit="openEditTask(task)"
-                @delete="softDeleteTask(task)"
+                @delete="handleDeleteTask(task)"
             />
-            <div v-if="list.UngroupedTasks.filter(t => showDeleted || !t.IsDeleted).length === 0" class="text-center py-8 text-gray-400 text-sm italic border-2 border-dashed border-gray-100 dark:border-slate-800 rounded-lg">
-              No tasks here
+            <div v-if="list.UngroupedTasks.filter(t => showDeleted || !t.IsDeleted).length === 0" class="text-center py-8 text-gray-400 text-sm italic border-2 border-dashed border-gray-300 dark:border-slate-800 rounded-lg">
+              {{ t('list.no_tasks') }}
             </div>
           </div>
         </div>
 
         <!-- Groups Sections -->
-        <div v-for="group in list.TaskGroups" :key="group.Id" class="bg-gray-100 dark:bg-slate-900/50 p-4 rounded-xl border border-gray-200 dark:border-slate-800">
+        <div v-for="group in list.TaskGroups" :key="group.Id" class="bg-gray-100/80 dark:bg-slate-900/50 p-4 rounded-xl border border-gray-200 dark:border-slate-800">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
               <i class="fa-solid fa-layer-group text-blue-500"></i>
@@ -218,7 +259,7 @@ const deleteGroup = (gid: string) => {
               <button @click="openEditGroup(group.Id, group.Title)" class="text-gray-400 hover:text-blue-500 ml-2"><i class="fa-solid fa-pen text-xs"></i></button>
             </div>
             <div class="flex gap-2">
-              <button @click="openAddTask(group.Id)" class="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded border hover:border-blue-500 transition-colors">+ Task</button>
+              <button @click="openAddTask(group.Id)" class="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded border border-gray-200 dark:border-slate-700 hover:border-blue-500 transition-colors">+ {{ t('task.add') }}</button>
               <button @click="deleteGroup(group.Id)" class="text-gray-400 hover:text-red-500 px-2"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
@@ -230,10 +271,10 @@ const deleteGroup = (gid: string) => {
                 :task="task"
                 @toggle="toggleTask(task)"
                 @edit="openEditTask(task)"
-                @delete="softDeleteTask(task)"
+                @delete="handleDeleteTask(task)"
             />
             <div v-if="group.Tasks.filter(t => showDeleted || !t.IsDeleted).length === 0" class="text-center py-4 text-gray-400 text-xs">
-              Empty Group
+              {{ t('list.empty_group') }}
             </div>
           </div>
         </div>
@@ -254,12 +295,24 @@ const deleteGroup = (gid: string) => {
         @save="handleSaveTask"
     />
 
-    <Modal v-model:open="isEditListOpen" :title="t('common.edit')" @ok="saveList">
-      <Input v-model:value="editListTitle" />
+    <Modal v-model:open="isEditListOpen" :title="t('common.edit')" @ok="saveList" :okText="t('common.save')" :cancelText="t('common.cancel')">
+      <div class="flex flex-col gap-4 pt-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('list.title') }}</label>
+          <Input v-model:value="editListTitle" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('list.desc') }}</label>
+          <Input.TextArea v-model:value="editListDesc" :rows="3" />
+        </div>
+      </div>
     </Modal>
 
-    <Modal v-model:open="isGroupModalOpen" :title="editingGroupId ? 'Edit Group' : t('group.add')" @ok="saveGroup">
-      <Input v-model:value="groupTitle" :placeholder="t('group.title')" @pressEnter="saveGroup" />
+    <Modal v-model:open="isGroupModalOpen" :title="editingGroupId ? t('group.edit') : t('group.add')" @ok="saveGroup" :okText="t('common.save')" :cancelText="t('common.cancel')">
+      <div class="pt-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('group.title') }}</label>
+        <Input v-model:value="groupTitle" :placeholder="t('group.title')" @pressEnter="saveGroup" />
+      </div>
     </Modal>
 
   </AppLayout>
