@@ -26,14 +26,19 @@ var createProject = (id: string): Project => ({
   UpdatedAt: new Date().toISOString(),
 });
 profile.Projects.push(
-    createProject("A")
+    createProject("Example A")
 );
 profile.Projects.push(
-    createProject("B")
+    createProject("Example B")
 );
 
+var tempCounter = 0;
 function createProjectClicked(){
   console.log("[DEBUG] Create Project");
+  tempCounter++;
+  profile.Projects.push(
+      createProject("Example " + tempCounter.toString())
+  );
 }
 
 function settingClicked(){
@@ -68,7 +73,7 @@ function settingClicked(){
       </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-3 space-y-2">
+    <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
       <div
           v-for="project in profile.Projects"
           :key="project.Id"
@@ -80,9 +85,9 @@ function settingClicked(){
             : 'hover:bg-white/50 dark:hover:bg-black/20 border dark:border-white/50'
         ]"
       >
-        <div v-if="!isCollapsed" class="flex px-4 py-3 items-center justify-between">
+        <div v-if="!isCollapsed" class="flex px-4 py-3 items-center">
           <i class="fa-solid fa-tasks text-black dark:text-white"></i>
-          <div class="font-medium truncate text-black dark:text-white">{{ project.Name }}</div>
+          <div class="font-medium truncate text-black dark:text-white px-3">{{ project.Name }}</div>
         </div>
         
         <div v-else class="flex justify-center py-3">
@@ -102,7 +107,7 @@ function settingClicked(){
       </span>
 
       <span v-else class="flex justify-center w-full py-3">
-          <i class="fa-solid fa-plus transition-transform group-hover:scale-110"></i>
+          <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
       </span>
     </button>
     </div>
