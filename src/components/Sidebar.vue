@@ -15,6 +15,7 @@ const selectProject = (id: string) => {
 };
 
 
+// Debug Code
 var createProject = (id: string): Project => ({
   Id: crypto.randomUUID(),
   Name: id,
@@ -30,6 +31,14 @@ profile.Projects.push(
 profile.Projects.push(
     createProject("B")
 );
+
+function createProjectClicked(){
+  console.log("[DEBUG] Create Project");
+}
+
+function settingClicked(){
+  console.log("[DEBUG] Setting Clicked");
+}
 </script>
 
 <template>
@@ -71,19 +80,35 @@ profile.Projects.push(
             : 'hover:bg-white/50 dark:hover:bg-black/20 border dark:border-white/50'
         ]"
       >
-        <div v-if="!isCollapsed" class="px-4 py-3">
+        <div v-if="!isCollapsed" class="flex px-4 py-3 items-center justify-between">
+          <i class="fa-solid fa-tasks text-black dark:text-white"></i>
           <div class="font-medium truncate text-black dark:text-white">{{ project.Name }}</div>
-          <div class="text-xs text-slate-300 dark:text-white truncate mt-0.5">{{ project.Description }}</div>
         </div>
         
         <div v-else class="flex justify-center py-3">
           <div class="w-2 h-2 rounded-full bg-slate-400" :class="{ 'bg-blue-500': selectedProjectId === project.Id }"></div>
         </div>
       </div>
+
+      <button
+        @click="createProjectClicked"
+        class="w-full flex items-center rounded-xl border border-dashed border-slate-400/70 dark:border-slate-300/50
+                 hover:bg-white/50 dark:hover:bg-white/10 hover:border-slate-500 dark:hover:border-slate-400
+                 transition-all duration-200 text-slate-600 dark:text-slate-300 group"
+      >
+      <span v-if="!isCollapsed" class="flex items-center px-4 py-3 gap-3 w-full">
+          <i class="fa-solid fa-plus transition-transform group-hover:scale-110 text-black dark:text-white"></i>
+          <span class="font-medium truncate text-black dark:text-white">{{ t("sidebar.create_project") }}</span>
+      </span>
+
+      <span v-else class="flex justify-center w-full py-3">
+          <i class="fa-solid fa-plus transition-transform group-hover:scale-110"></i>
+      </span>
+    </button>
     </div>
 
     <div class="p-3 border-t border-white/40">
-      <button class="w-full flex items-center justify-center p-3 rounded-xl hover:bg-white/50 dark:hover:bg-black/50 transition-colors text-slate-700 dark:text-white">
+      <button @click="settingClicked" class="w-full flex items-center justify-center p-3 rounded-xl hover:bg-white/50 dark:hover:bg-black/50 transition-colors text-slate-700 dark:text-white">
         <i class="fa-solid fa-gear text-black dark:text-white"></i>
         <span v-if="!isCollapsed" class="ml-2 text-black dark:text-white">{{ t('sidebar.settings') }}</span>
       </button>
@@ -93,5 +118,17 @@ profile.Projects.push(
 </template>
 
 <style scoped>
-
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
 </style>

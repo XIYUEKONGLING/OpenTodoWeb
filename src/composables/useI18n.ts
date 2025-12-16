@@ -5,10 +5,12 @@ const messages: Record<Locale, Record<string, string>> = {
     "en-US": {
         "program.title": "OpenTodo",
         "sidebar.settings": "Settings",
+        "sidebar.create_project": "Create Project",
     },
     "zh-CN": {
         "program.title": "OpenTodo",
         "sidebar.settings": "设置",
+        "sidebar.create_project": "新建项目",
     }
 }
 
