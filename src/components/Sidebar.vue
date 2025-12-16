@@ -44,24 +44,24 @@ const handleCreateProject = () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col h-full bg-white dark:bg-slate-900">
     <!-- Header / Toggle -->
-    <div class="h-16 flex items-center justify-between px-4 border-b" :class="isMobile ? 'hidden' : 'border-gray-100 dark:border-slate-800'">
-      <div v-if="!collapsed" class="flex items-center gap-2 font-bold text-lg truncate">
-        <i class="fa-solid fa-check-double text-blue-600"></i>
+    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-slate-800" :class="isMobile ? 'hidden' : ''">
+      <div v-if="!collapsed" class="flex items-center gap-2 font-bold text-lg truncate text-gray-900 dark:text-white">
+        <i class="fa-solid fa-check-double text-blue-600 dark:text-blue-400"></i>
         <span>{{ t('app.title') }}</span>
       </div>
       <div v-else class="w-full flex justify-center">
-        <i class="fa-solid fa-check-double text-blue-600 text-xl"></i>
+        <i class="fa-solid fa-check-double text-blue-600 dark:text-blue-400 text-xl"></i>
       </div>
-      <button v-if="!isMobile" @click="emit('toggle')" class="text-gray-400 hover:text-blue-500 transition-colors">
+      <button v-if="!isMobile" @click="emit('toggle')" class="text-gray-400 dark:text-gray-500 hover:text-blue-500 transition-colors">
         <i class="fa-solid" :class="collapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
       </button>
     </div>
 
     <!-- Projects -->
     <div class="flex-1 overflow-y-auto py-4 space-y-1 custom-scrollbar">
-      <div v-if="!collapsed" class="px-4 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+      <div v-if="!collapsed" class="px-4 mb-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
         {{ t('nav.projects') }}
       </div>
 
@@ -82,7 +82,7 @@ const handleCreateProject = () => {
 
       <div
           @click="isCreateModalVisible = true"
-          class="flex items-center px-4 py-3 cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+          class="flex items-center px-4 py-3 cursor-pointer text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
       >
         <Tooltip :title="collapsed ? t('nav.new_project') : ''" placement="right">
           <i class="fa-solid fa-plus text-lg shrink-0" :class="collapsed ? 'mx-auto' : 'mr-3'"></i>
@@ -91,12 +91,13 @@ const handleCreateProject = () => {
       </div>
     </div>
 
-    <!-- Settings Footer -->
-    <div class="p-4 border-t border-gray-100 dark:border-slate-800">
+    <div class="p-4 border-t border-gray-200 dark:border-slate-800">
       <div
           @click="navigateTo('/settings')"
           class="flex items-center justify-center p-2 rounded-lg cursor-pointer transition-colors"
-          :class="route.path === '/settings' ? 'bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'"
+          :class="route.path === '/settings' 
+            ? 'bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white' 
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800'"
       >
         <Tooltip :title="collapsed ? t('nav.settings') : ''" placement="right">
           <i class="fa-solid fa-gear text-lg shrink-0" :class="collapsed ? '' : 'mr-3'"></i>
@@ -105,7 +106,7 @@ const handleCreateProject = () => {
       </div>
     </div>
 
-    <Modal v-model:open="isCreateModalVisible" :title="t('nav.new_project')" @ok="handleCreateProject">
+    <Modal v-model:open="isCreateModalVisible" :title="t('nav.new_project')" @ok="handleCreateProject" :okText="t('common.confirm')" :cancelText="t('common.cancel')">
       <Input v-model:value="newProjectName" :placeholder="t('project.name')" />
     </Modal>
   </div>

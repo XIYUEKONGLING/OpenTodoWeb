@@ -75,14 +75,14 @@ const goToList = (lid: string) => {
 
 <template>
   <AppLayout>
-    <div v-if="project" class="flex-1 flex flex-col h-full p-6 overflow-y-auto">
+    <div v-if="project" class="flex-1 flex flex-col h-full p-6 overflow-y-auto bg-gray-50 dark:bg-slate-950">
 
       <!-- Header -->
       <div class="flex items-start justify-between mb-8">
         <div>
           <div class="flex items-center gap-3">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ project.Name }}</h1>
-            <button @click="openEditProject" class="text-gray-400 hover:text-blue-500"><i class="fa-solid fa-pen"></i></button>
+            <button @click="openEditProject" class="text-gray-400 dark:text-gray-500 hover:text-blue-500"><i class="fa-solid fa-pen"></i></button>
           </div>
           <p class="text-gray-500 dark:text-gray-400 mt-1 max-w-2xl">{{ project.Description }}</p>
         </div>
@@ -110,7 +110,7 @@ const goToList = (lid: string) => {
             <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
               <i class="fa-solid fa-list-check text-xl"></i>
             </div>
-            <i class="fa-solid fa-arrow-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
+            <i class="fa-solid fa-arrow-right text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors"></i>
           </div>
           <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 mb-1">{{ list.Title }}</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -121,25 +121,25 @@ const goToList = (lid: string) => {
         <!-- Add List Card -->
         <button
             @click="isAddListOpen = true"
-            class="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-slate-700 text-gray-400 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all min-h-[160px]"
+            class="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-slate-700 text-gray-400 dark:text-gray-500 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all min-h-[160px]"
         >
           <i class="fa-solid fa-plus text-2xl mb-2"></i>
           <span class="font-medium">{{ t('list.add') }}</span>
         </button>
       </div>
 
-      <div v-else class="flex-1 flex flex-col items-center justify-center text-gray-400">
+      <div v-else class="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-600">
         <Empty :description="false" />
         <p class="mt-4 mb-6">{{ t('list.no_lists') }}</p>
         <Button type="primary" size="large" @click="isAddListOpen = true">{{ t('list.add') }}</Button>
       </div>
     </div>
 
-    <div v-else class="flex-1 flex items-center justify-center text-gray-500">
+    <div v-else class="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
       Project not found.
     </div>
 
-    <!-- Modals -->
+    <!-- Modals (no changes needed) -->
     <Modal v-model:open="isEditProjectOpen" :title="t('common.edit')" @ok="saveProject" :okText="t('common.save')" :cancelText="t('common.cancel')">
       <div class="flex flex-col gap-4 pt-4">
         <div>

@@ -36,6 +36,7 @@ const saveList = () => {
   if(list.value) {
     list.value.Title = editListTitle.value;
     list.value.Description = editListDesc.value;
+    list.value.UpdatedAt = new Date().toISOString();
   }
   isEditListOpen.value = false;
 };
@@ -61,7 +62,7 @@ const deleteList = () => {
 const isTaskModalOpen = ref(false);
 const currentTaskData = ref<Partial<TaskItem>>({});
 const isEditingTask = ref(false);
-const activeGroupId = ref<string | null>(null); // null = ungrouped
+const activeGroupId = ref<string | null>(null);
 
 const openAddTask = (groupId: string | null = null) => {
   activeGroupId.value = groupId;
@@ -111,11 +112,11 @@ const handleSaveTask = (data: any) => {
 const toggleTask = (task: TaskItem) => {
   task.IsCompleted = !task.IsCompleted;
   task.CompletedAt = task.IsCompleted ? new Date().toISOString() : null;
+  task.UpdatedAt = new Date().toISOString();
 };
 
 const handleDeleteTask = (task: TaskItem) => {
   if (task.IsDeleted) {
-    // Permanent Delete
     Modal.confirm({
       title: t('task.delete_perm_confirm'),
       okType: 'danger',
@@ -123,7 +124,6 @@ const handleDeleteTask = (task: TaskItem) => {
       cancelText: t('common.cancel'),
       onOk: () => {
         if (!list.value) return;
-        // Search and remove
         let idx = list.value.UngroupedTasks.findIndex(t => t.Id === task.Id);
         if (idx !== -1) {
           list.value.UngroupedTasks.splice(idx, 1);
@@ -139,7 +139,6 @@ const handleDeleteTask = (task: TaskItem) => {
       }
     });
   } else {
-    // Soft Delete
     task.IsDeleted = true;
     task.UpdatedAt = new Date().toISOString();
   }
@@ -166,8 +165,11 @@ const saveGroup = () => {
   if (!list.value || !groupTitle.value.trim()) return;
 
   if (editingGroupId.value) {
-    const g = list.value.TaskGroups.find(g => g.Id === editingGroupId.value);
-    if (g) g.Title = groupTitle.value;
+    const g = list.value.TaskGroups.find(group => group.Id === editingGroupId.value);
+    if (g) {
+      g.Title = groupTitle.value;
+      g.UpdatedAt = new Date().toISOString();
+    }
   } else {
     list.value.TaskGroups.push({
       Id: uuidv4(),
@@ -205,12 +207,16 @@ const deleteGroup = (gid: string) => {
       <div class="h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0">
         <div class="flex items-center gap-4">
           <Breadcrumb>
-            <BreadcrumbItem><a @click="router.push(`/project/${project.Id}`)"><i class="fa-solid fa-arrow-left mr-1"></i> {{ project.Name }}</a></BreadcrumbItem>
-            <BreadcrumbItem>{{ list.Title }}</BreadcrumbItem>
+            <BreadcrumbItem>
+              <a @click="router.push(`/project/${project.Id}`)" class="text-gray-600 dark:text-gray-400 hover:text-blue-500">
+                <i class="fa-solid fa-arrow-left mr-1"></i> {{ project.Name }}
+              </a>
+            </BreadcrumbItem>
+            <BreadcrumbItem class="text-gray-900 dark:text-gray-100">{{ list.Title }}</BreadcrumbItem>
           </Breadcrumb>
         </div>
         <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2 text-sm text-gray-500">
+          <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <span>{{ t('list.show_deleted') }}</span>
             <Switch v-model:checked="showDeleted" size="small" />
           </div>
@@ -222,15 +228,14 @@ const deleteGroup = (gid: string) => {
       <!-- Content -->
       <div class="flex-1 overflow-y-auto p-6 space-y-8 max-w-5xl mx-auto w-full">
 
-        <!-- Fixed Issue 6: Show Description -->
-        <div v-if="list.Description" class="text-gray-500 dark:text-gray-400 text-sm bg-white dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
+        <!-- Description -->
+        <div v-if="list.Description" class="text-gray-600 dark:text-gray-400 text-sm bg-white dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
           {{ list.Description }}
         </div>
 
         <!-- Ungrouped Tasks Section -->
         <div>
           <div class="flex items-center justify-between mb-4">
-            <!-- Fixed Issue 2: Darker text for Light mode -->
             <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200">Tasks</h2>
             <Button type="dashed" size="small" @click="openAddTask(null)">+ {{ t('task.add') }}</Button>
           </div>
@@ -259,7 +264,7 @@ const deleteGroup = (gid: string) => {
               <button @click="openEditGroup(group.Id, group.Title)" class="text-gray-400 hover:text-blue-500 ml-2"><i class="fa-solid fa-pen text-xs"></i></button>
             </div>
             <div class="flex gap-2">
-              <button @click="openAddTask(group.Id)" class="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded border border-gray-200 dark:border-slate-700 hover:border-blue-500 transition-colors">+ {{ t('task.add') }}</button>
+              <button @click="openAddTask(group.Id)" class="text-xs bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded border border-gray-200 dark:border-slate-700 hover:border-blue-500 transition-colors">+ {{ t('task.add') }}</button>
               <button @click="deleteGroup(group.Id)" class="text-gray-400 hover:text-red-500 px-2"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>

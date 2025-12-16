@@ -2,7 +2,10 @@
 import { ref, watch } from 'vue';
 import { Modal, Input, DatePicker, TimePicker, Slider, Row, Col, Switch } from 'ant-design-vue';
 import type { TaskItem } from '../models';
+import { useI18n } from '../composables/useI18n';
 import dayjs from 'dayjs';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   open: boolean;
@@ -40,7 +43,11 @@ watch(() => props.open, (val) => {
 
 const handleOk = () => {
   emit('save', {
-    ...formState.value,
+    ...props.taskData, // Preserve Id and other fields
+    Title: formState.value.Title,
+    Description: formState.value.Description,
+    Progress: formState.value.Progress,
+    IsCompleted: formState.value.IsCompleted,
     DueDate: formState.value.DueDate?.format('YYYY-MM-DD') || null,
     DueTime: formState.value.DueTime?.format('HH:mm:ss') || null,
     StartDate: formState.value.StartDate?.format('YYYY-MM-DD') || null,
@@ -53,47 +60,48 @@ const handleOk = () => {
 <template>
   <Modal
       :open="open"
-      :title="isEdit ? 'Edit Task' : 'New Task'"
+      :title="isEdit ? t('task.edit') : t('task.new')"
       @update:open="$emit('update:open', $event)"
       @ok="handleOk"
+      :okText="t('common.save')"
+      :cancelText="t('common.cancel')"
       width="600px"
   >
     <div class="space-y-5 py-2">
       <!-- Title -->
       <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Task Title</label>
-        <Input v-model:value="formState.Title" placeholder="What needs to be done?" size="large" />
+        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t('task.title') }}</label>
+        <Input v-model:value="formState.Title" :placeholder="t('task.title_ph')" size="large" />
       </div>
 
       <!-- Dates Row -->
       <Row :gutter="16">
         <Col :span="12">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Start</label>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t('task.start_date') }}</label>
           <div class="flex gap-2">
-            <DatePicker v-model:value="formState.StartDate" class="w-full" placeholder="Date" />
+            <DatePicker v-model:value="formState.StartDate" class="w-full" :placeholder="t('task.start_date')" />
             <TimePicker v-model:value="formState.StartTime" format="HH:mm" placeholder="Time" />
           </div>
         </Col>
         <Col :span="12">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Due</label>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t('task.due_date') }}</label>
           <div class="flex gap-2">
-            <DatePicker v-model:value="formState.DueDate" class="w-full" placeholder="Date" />
+            <DatePicker v-model:value="formState.DueDate" class="w-full" :placeholder="t('task.due_date')" />
             <TimePicker v-model:value="formState.DueTime" format="HH:mm" placeholder="Time" />
           </div>
         </Col>
       </Row>
 
-      <!-- Progress & Status -->
-      <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-100 dark:border-slate-800">
+      <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg border border-gray-200 dark:border-slate-700">
         <Row :gutter="16" align="middle">
           <Col :span="16">
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Progress ({{ formState.Progress }}%)</label>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t('task.progress') }} ({{ formState.Progress }}%)</label>
             <Slider v-model:value="formState.Progress" :min="0" :max="100" />
           </Col>
           <Col :span="8" class="text-right">
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t('task.status') }}</label>
             <div class="flex items-center justify-end gap-2">
-              <span class="text-sm">Completed</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('task.completed') }}</span>
               <Switch v-model:checked="formState.IsCompleted" />
             </div>
           </Col>
@@ -102,11 +110,11 @@ const handleOk = () => {
 
       <!-- Description -->
       <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t('task.desc') }}</label>
         <Input.TextArea
             v-model:value="formState.Description"
             :rows="4"
-            placeholder="Add details, context, or sub-notes..."
+            :placeholder="t('task.desc_ph')"
             class="resize-none"
         />
       </div>

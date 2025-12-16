@@ -4,7 +4,7 @@ import AppLayout from "../components/AppLayout.vue";
 import { useI18n } from "../composables/useI18n";
 import { useProfile } from "../composables/useProfile";
 import { useTheme } from "../composables/useTheme";
-import { Modal, message, Upload, Button, Card, Select } from 'ant-design-vue';
+import { Modal, message, Upload, Button, Card, Select, Divider } from 'ant-design-vue';
 import type { UploadProps, UploadFile } from 'ant-design-vue';
 
 const { themeMode, setTheme } = useTheme();
@@ -37,7 +37,7 @@ const beforeUpload: UploadProps['beforeUpload'] = async (file) => {
     message.error(t('settings.parse_error'));
     console.error(e);
   }
-  return false; // Prevent auto upload
+  return false;
 };
 
 const handleReset = () => {
@@ -57,22 +57,22 @@ const handleReset = () => {
 
 <template>
   <AppLayout>
-    <div class="flex-1 h-full overflow-y-auto p-8">
+    <div class="flex-1 h-full overflow-y-auto p-8 bg-gray-50 dark:bg-slate-950">
       <div class="max-w-3xl mx-auto space-y-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ t('nav.settings') }}</h1>
 
-        <!-- Language & Theme -->
-        <Card :title="t('settings.language')" class="shadow-sm mb-6">
+        <div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ t('settings.language') }}</h2>
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
-              <span>{{ t('settings.language') }}</span>
+              <span class="text-gray-700 dark:text-gray-300">{{ t('settings.language') }}</span>
               <Select :value="locale" @change="setLocale" class="w-48">
                 <Select.Option value="en-US">English (US)</Select.Option>
                 <Select.Option value="zh-CN">简体中文</Select.Option>
               </Select>
             </div>
             <div class="flex items-center justify-between">
-              <span>{{ t('settings.theme') }}</span>
+              <span class="text-gray-700 dark:text-gray-300">{{ t('settings.theme') }}</span>
               <Select :value="themeMode" @change="setTheme" class="w-48">
                 <Select.Option value="auto">{{ t('settings.theme_auto') }}</Select.Option>
                 <Select.Option value="light">{{ t('settings.theme_light') }}</Select.Option>
@@ -80,13 +80,17 @@ const handleReset = () => {
               </Select>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <!-- Data Management -->
-        <Card :title="t('settings.data_management')" class="shadow-sm">
+        <Divider class="my-8">
+          <span class="text-gray-400 dark:text-gray-600 text-sm">{{ t('settings.data_management') }}</span>
+        </Divider>
+
+        <div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ t('settings.data_management') }}</h2>
           <div class="space-y-6">
             <!-- Export -->
-            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
               <div>
                 <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ t('settings.export') }}</h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('settings.export_desc') }}</p>
@@ -98,7 +102,7 @@ const handleReset = () => {
             </div>
 
             <!-- Import -->
-            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
               <div>
                 <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ t('settings.import') }}</h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('settings.import_warn') }}</p>
@@ -122,7 +126,7 @@ const handleReset = () => {
               </Button>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   </AppLayout>
