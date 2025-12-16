@@ -4,7 +4,14 @@ import { useProfile } from "../composables/useProfile";
 import { useI18n } from "../composables/useI18n";
 import { useRouter, useRoute } from "vue-router";
 import { v4 as uuidv4 } from 'uuid';
-import { Modal, Input, message } from 'ant-design-vue';
+import { Modal, Input, Tooltip } from 'ant-design-vue';
+
+const props = defineProps<{
+  collapsed: boolean;
+  isMobile?: boolean;
+}>();
+
+const emit = defineEmits(['toggle', 'close']);
 
 const { profile } = useProfile();
 const { t } = useI18n();
@@ -13,51 +20,48 @@ const route = useRoute();
 
 const isCreateModalVisible = ref(false);
 const newProjectName = ref("");
-const newProjectDesc = ref("");
 
 const navigateTo = (path: string) => {
   router.push(path);
-};
-
-const showCreateModal = () => {
-  newProjectName.value = "";
-  newProjectDesc.value = "";
-  isCreateModalVisible.value = true;
+  if (props.isMobile) emit('close');
 };
 
 const handleCreateProject = () => {
-  if (!newProjectName.value.trim()) {
-    message.error("Project name is required");
-    return;
-  }
-
-  const newProject = {
-    Id: uuidv4(),
+  if (!newProjectName.value.trim()) return;
+  const newId = uuidv4();
+  profile.Projects.push({
+    Id: newId,
     Name: newProjectName.value,
-    Description: newProjectDesc.value,
+    Description: null,
     TaskLists: [],
     CreatedAt: new Date().toISOString(),
     UpdatedAt: new Date().toISOString()
-  };
-
-  profile.Projects.push(newProject);
+  });
   isCreateModalVisible.value = false;
-  router.push(`/project/${newProject.Id}`);
-  message.success("Project created");
+  newProjectName.value = "";
+  navigateTo(`/project/${newId}`);
 };
 </script>
 
 <template>
-  <div class="w-64 h-full bg-white border-r border-gray-200 flex flex-col shrink-0">
-    <!-- Header -->
-    <div class="h-16 flex items-center px-6 border-b border-gray-100">
-      <i class="fa-solid fa-check-double text-blue-600 text-xl mr-3"></i>
-      <span class="font-bold text-lg text-gray-800">{{ t('app.title') }}</span>
+  <div class="flex flex-col h-full">
+    <!-- Header / Toggle -->
+    <div class="h-16 flex items-center justify-between px-4 border-b" :class="isMobile ? 'hidden' : 'border-gray-100 dark:border-slate-800'">
+      <div v-if="!collapsed" class="flex items-center gap-2 font-bold text-lg truncate">
+        <i class="fa-solid fa-check-double text-blue-600"></i>
+        <span>{{ t('app.title') }}</span>
+      </div>
+      <div v-else class="w-full flex justify-center">
+        <i class="fa-solid fa-check-double text-blue-600 text-xl"></i>
+      </div>
+      <button v-if="!isMobile" @click="emit('toggle')" class="text-gray-400 hover:text-blue-500 transition-colors">
+        <i class="fa-solid" :class="collapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+      </button>
     </div>
 
-    <!-- Projects List -->
-    <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-      <div class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+    <!-- Projects -->
+    <div class="flex-1 overflow-y-auto py-4 space-y-1 custom-scrollbar">
+      <div v-if="!collapsed" class="px-4 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
         {{ t('nav.projects') }}
       </div>
 
@@ -65,52 +69,44 @@ const handleCreateProject = () => {
           v-for="project in profile.Projects"
           :key="project.Id"
           @click="navigateTo(`/project/${project.Id}`)"
-          class="group flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors duration-150"
-          :class="route.path === `/project/${project.Id}` ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'"
+          class="group flex items-center px-4 py-3 cursor-pointer transition-all border-l-4"
+          :class="route.path.startsWith(`/project/${project.Id}`) 
+          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' 
+          : 'border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800'"
       >
-        <i class="fa-solid fa-folder mr-3" :class="route.path === `/project/${project.Id}` ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'"></i>
-        <span class="truncate">{{ project.Name }}</span>
+        <Tooltip :title="collapsed ? project.Name : ''" placement="right">
+          <i class="fa-solid fa-folder text-lg shrink-0" :class="collapsed ? 'mx-auto' : 'mr-3'"></i>
+        </Tooltip>
+        <span v-if="!collapsed" class="truncate text-sm font-medium">{{ project.Name }}</span>
       </div>
 
-      <button
-          @click="showCreateModal"
-          class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-500 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors mt-2"
+      <div
+          @click="isCreateModalVisible = true"
+          class="flex items-center px-4 py-3 cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
       >
-        <i class="fa-solid fa-plus mr-3 text-gray-400"></i>
-        {{ t('nav.new_project') }}
-      </button>
+        <Tooltip :title="collapsed ? t('nav.new_project') : ''" placement="right">
+          <i class="fa-solid fa-plus text-lg shrink-0" :class="collapsed ? 'mx-auto' : 'mr-3'"></i>
+        </Tooltip>
+        <span v-if="!collapsed" class="truncate text-sm">{{ t('nav.new_project') }}</span>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <div class="p-4 border-t border-gray-200">
-      <button
+    <!-- Settings Footer -->
+    <div class="p-4 border-t border-gray-100 dark:border-slate-800">
+      <div
           @click="navigateTo('/settings')"
-          class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-          :class="route.path === '/settings' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+          class="flex items-center justify-center p-2 rounded-lg cursor-pointer transition-colors"
+          :class="route.path === '/settings' ? 'bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'"
       >
-        <i class="fa-solid fa-gear mr-3 text-gray-400"></i>
-        {{ t('nav.settings') }}
-      </button>
+        <Tooltip :title="collapsed ? t('nav.settings') : ''" placement="right">
+          <i class="fa-solid fa-gear text-lg shrink-0" :class="collapsed ? '' : 'mr-3'"></i>
+        </Tooltip>
+        <span v-if="!collapsed" class="font-medium text-sm">{{ t('nav.settings') }}</span>
+      </div>
     </div>
 
-    <!-- Create Project Modal -->
-    <Modal
-        v-model:open="isCreateModalVisible"
-        :title="t('nav.new_project')"
-        @ok="handleCreateProject"
-        :okText="t('common.confirm')"
-        :cancelText="t('common.cancel')"
-    >
-      <div class="space-y-4 py-2">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('project.name') }}</label>
-          <Input v-model:value="newProjectName" :placeholder="t('project.name')" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('project.desc') }}</label>
-          <Input.TextArea v-model:value="newProjectDesc" :rows="3" />
-        </div>
-      </div>
+    <Modal v-model:open="isCreateModalVisible" :title="t('nav.new_project')" @ok="handleCreateProject">
+      <Input v-model:value="newProjectName" :placeholder="t('project.name')" />
     </Modal>
   </div>
 </template>

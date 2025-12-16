@@ -1,7 +1,22 @@
 <script setup lang="ts">
+import { useTheme } from "./composables/useTheme";
+import { ConfigProvider } from 'ant-design-vue';
 
+const { initTheme, antAlgorithm, isDark } = useTheme();
+initTheme();
 </script>
 
 <template>
-  <router-view />
+  <ConfigProvider
+      :theme="{
+      algorithm: antAlgorithm,
+      token: {
+        colorPrimary: '#3b82f6',
+        colorBgContainer: isDark ? '#1e293b' : '#ffffff',
+        colorText: isDark ? '#f1f5f9' : '#1e293b',
+      }
+    }"
+  >
+    <router-view />
+  </ConfigProvider>
 </template>
